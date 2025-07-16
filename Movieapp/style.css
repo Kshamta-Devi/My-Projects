@@ -1,0 +1,48 @@
+*{
+    padding: 0;
+    margin: 0;
+}
+
+.uppar{
+    background:#1a1a2e;
+    height: 20vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 0px;
+}
+
+.uppar h1{
+    color: #e50914;
+}
+
+.uppar input{
+    margin-top: 20px;
+    border: 0;
+    height: 38px;
+    width: 40%;
+    border-radius: 50px;
+    background-color: #2c2c44;
+    padding: 0px 10px;
+}
+
+.categories{
+    margin-top: 10px;
+}
+
+.categories button{
+    border: none;
+    padding: 5px 20px;
+    background-color: #2c2c44;
+    color: white;
+    border-radius: 20px
+}
+
+.categories button:hover{
+    background-color: red
+}
+
+
+
+

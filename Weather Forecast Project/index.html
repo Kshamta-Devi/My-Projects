@@ -1,0 +1,38 @@
+<html>
+  <head>
+    <title>Weather app</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div id="outer">
+      <div id="search">
+        <input type="text" placeholder="Enter city name..." />
+        <img src="img/search.png" alt="Search Icon" onclick="search()" />
+      </div>
+      <div id="main">
+        <img id ="weather-icon" src="img/clear.png" alt="Weather Icon" />
+        <h3 id="city">City</h3>
+        <h4 id="temp">0°C</h4>
+
+        <div class="col">
+          <img id = "weather-icon" src="img/wind.png" alt="Wind Icon" />
+          <div>
+            <p>Wind</p>
+            <p id="wind">0 km/h</p>
+          </div>
+        </div>
+        <div class="col">
+          <img id ="weather-icon"  src="img/humidity.png" alt="" />
+          <div>
+            <p>Humidity</p>
+            <p id="humidity">0%</p>
+          </div>
+           </div>
+            <p id="description" style="font-size:20px;margin-top:10px;"></p>
+        </div>
+        </div>
+      </div>
+    </div>
+    <script src="js/script.js"></script>
+  </body>
+</html>
