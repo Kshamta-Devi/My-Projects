@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieFlix - Browse Movies</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background-color: #0f0f1a;
+            color: #ffffff;
+        }
+
+        header {
+            background-color: #1a1a2e;
+            padding: 20px 0;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #e50914;
+        }
+
+        .search-container {
+            margin: 20px auto;
+            width: 80%;
+            max-width: 600px;
+        }
+
+        #search {
+            width: 100%;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            background-color: #2c2c44;
+            color: white;
+        }
+
+        .categories {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 20px;
+            background-color: #1a1a2e;
+        }
+
+        .category-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            background-color: #2c2c44;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .category-btn:hover {
+            background-color: #e50914;
+        }
+
+        .category-btn.active {
+            background-color: #e50914;
+            font-weight: bold;
+        }
+
+        .movies-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .movie-card {
+            background-color: #1a1a2e;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+
+        .movie-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .movie-poster {
+            width: 100%;
+            height: 330px;
+            object-fit: cover;
+        }
+
+        .movie-info {
+            padding: 15px;
+        }
+
+        .movie-title {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .movie-meta {
+            display: flex;
+            justify-content: space-between;
+            color: #a0a0a0;
+            font-size: 0.9rem;
+        }
+
+        .movie-rating {
+            color: #f5c518;
+            font-weight: bold;
+        }
+
+        .no-results {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2rem;
+            color: #a0a0a0;
+        }
+
+        .loading {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2rem;
+            color: #a0a0a0;
+        }
+
+        @media (max-width: 768px) {
+            .movies-container {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 20px;
+                padding: 20px;
+            }
+
+            .movie-poster {
+                height: 225px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>MovieFlix</h1>
+        <div class="search-container">
+            <input type="text" id="search" placeholder="Search for movies...">
+        </div>
+    </header>
+
+    <div class="categories">
+        <button class="category-btn active" data-category="all">All</button>
+        <button class="category-btn" data-category="28">Action</button>
+        <button class="category-btn" data-category="35">Comedy</button>
+        <button class="category-btn" data-category="18">Drama</button>
+        <button class="category-btn" data-category="878">Sci-Fi</button>
+        <button class="category-btn" data-category="27">Horror</button>
+        <button class="category-btn" data-category="10749">Romance</button>
+        <button class="category-btn" data-category="53">Thriller</button>
+        <button class="category-btn" data-category="16">Animation</button>
+    </div>
+
+    <div class="movies-container" id="movies-container">
+        <div class="loading">Loading movies...</div>
+    </div>
+
+    <script>
+        // TMDB API configuration
+        const API_KEY = '6b6e7c1949de9e2294ed022a93af57eb'; // Replace with your actual TMDB API key
+        const BASE_URL = 'https://api.themoviedb.org/3';
+        const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
+
+        // DOM elements
+        const moviesContainer = document.getElementById('movies-container');
+        const searchInput = document.getElementById('search');
+        const categoryButtons = document.querySelectorAll('.category-btn');
+
+        // Current state
+        let currentMovies = [];
+        let currentCategory = 'all';
+        let currentSearch = '';
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchPopularMovies();
+            setupEventListeners();
+        });
+
+        // Set up event listeners
+        function setupEventListeners() {
+            // Category filter buttons
+            categoryButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    categoryButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    currentCategory = button.dataset.category;
+                    filterMovies();
+                });
+            });
+
+            // Search input
+            searchInput.addEventListener('input', (e) => {
+                currentSearch = e.target.value.toLowerCase();
+                filterMovies();
+            });
+        }
+
+        // Fetch popular movies from TMDB API
+        async function fetchPopularMovies() {
+            try {
+                const response = await fetch(`${BASE_URL}/movie/popular?api_key=${API_KEY}&language=en-US&page=1`);
+                const data = await response.json();
+                currentMovies = data.results;
+                displayMovies(currentMovies);
+            } catch (error) {
+                console.error('Error fetching movies:', error);
+                moviesContainer.innerHTML = '<div class="no-results">Failed to load movies. Please try again later.</div>';
+            }
+        }
+
+        // Display movies in the UI
+        function displayMovies(movies) {
+            if (movies.length === 0) {
+                moviesContainer.innerHTML = '<div class="no-results">No movies found. Try a different search or category.</div>';
+                return;
+            }
+
+            moviesContainer.innerHTML = movies.map(movie => `
+                <div class="movie-card" data-id="${movie.id}">
+                    <img class="movie-poster" src="${IMAGE_BASE_URL + movie.poster_path}" alt="${movie.title}">
+                    <div class="movie-info">
+                        <h3 class="movie-title">${movie.title}</h3>
+                        <div class="movie-meta">
+                            <span class="movie-year">${movie.release_date ? movie.release_date.substring(0, 4) : 'N/A'}</span>
+                            <span class="movie-rating">${movie.vote_average.toFixed(1)}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Filter movies based on category and search term
+        function filterMovies() {
+            let filteredMovies = [...currentMovies];
+
+            // Filter by category if not 'all'
+            if (currentCategory !== 'all') {
+                filteredMovies = filteredMovies.filter(movie => 
+                    movie.genre_ids.includes(parseInt(currentCategory))
+                );
+            }
+
+            // Filter by search term if any
+            if (currentSearch) {
+                filteredMovies = filteredMovies.filter(movie => 
+                    movie.title.toLowerCase().includes(currentSearch)
+                );
+            }
+
+            displayMovies(filteredMovies);
+        }
+
+        // You could also implement a search function that calls the TMDB search API
+        // async function searchMovies(query) {
+        //     try {
+        //         const response = await fetch(`${BASE_URL}/search/movie?api_key=${API_KEY}&query=${query}`);
+        //         const data = await response.json();
+        //         currentMovies = data.results;
+        //         displayMovies(currentMovies);
+        //     } catch (error) {
+        //         console.error('Error searching movies:', error);
+        //     }
+        // }
+    </script>
+</body>
+</html>
